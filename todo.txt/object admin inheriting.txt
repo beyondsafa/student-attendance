@@ -1,0 +1,3 @@
+object admin inheriting from person attributes username password object function create remove attendance. do all thing others can . add teachers remove teachers
+object teacher inheriting from admin also has username password object function add student remove student
+object student inheriting from person attributes ID CGPA Attendance rate
