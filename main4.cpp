@@ -75,16 +75,18 @@ public:
     }
 
     void loadFromFile(ifstream& inFile) {
+        attendance.clear();
         string line;
-        if (getline(inFile, line)) {
-            studentID = line;
-        }
-        while (getline(inFile, line) && line != "END") {
-            string date;
-            bool isPresent;
+        while (getline(inFile, line)) {
+            if (line == "END") break;
             istringstream iss(line);
-            iss >> date >> isPresent;
-            attendance[date] = isPresent;
+            string date;
+            int presentInt;
+            if (iss >> date >> presentInt) {
+                attendance[date] = (presentInt == 1);
+            } else {
+                cerr << "Invalid attendance entry: " << line << endl;
+            }
         }
     }
 
@@ -111,10 +113,10 @@ unordered_map<string, Student> loadAllStudentsFromFile(const string& filename) {
         string line;
         while (getline(inFile, line)) {
             if (!line.empty()) {
-                string studentID = line;
-                Student student(studentID);
+                string id = line;
+                Student student(id);
                 student.loadFromFile(inFile);
-                students[studentID] = student;
+                students[id] = student;
             }
         }
         inFile.close();
@@ -129,16 +131,19 @@ public:
     Teacher(string username, string hashedPassword, bool isHashed) : Person(username, hashedPassword, isHashed) {}
 
     void addStudent(unordered_map<string, Student>& students) {
-        string studentID;
-        cout << "Enter new Student ID: ";
-        cin >> studentID;
-        if (students.find(studentID) == students.end()) {
-            students[studentID] = Student(studentID);
-            saveAllStudentsToFile("students.txt", students);
-            cout << "Student added successfully." << endl;
-        } else {
-            cout << "Student already exists." << endl;
+        while (true) {
+            string studentID;
+            cout << "Enter new Student ID (or type 'done' to finish): ";
+            cin >> studentID;
+            if (studentID == "done") break;
+            if (students.find(studentID) == students.end()) {
+                students[studentID] = Student(studentID);
+                cout << "Student added successfully." << endl;
+            } else {
+                cout << "Student already exists." << endl;
+            }
         }
+        saveAllStudentsToFile("students.txt", students);
     }
 
     void takeAttendance(unordered_map<string, Student>& students) {
@@ -146,8 +151,7 @@ public:
         string date;
         cout << "Enter Date (YYYY-MM-DD): ";
         cin >> date;
-        int count = 0;
-        while (count < 100) {
+        while (true) {
             string studentID;
             char status;
             cout << "Enter Student ID (or type 'done' to finish): ";
@@ -165,13 +169,11 @@ public:
             auto it = students.find(studentID);
             if (it != students.end()) {
                 it->second.markAttendance(date, (status == 'y' || status == 'Y'));
-                saveAllStudentsToFile("students.txt", students);
             } else {
                 cout << "Student not found!" << endl;
             }
-            count++;
         }
-        if (count == 100) cout << "Max attendance reached." << endl;
+        saveAllStudentsToFile("students.txt", students);
     }
 
     void viewAttendanceReport(const unordered_map<string, Student>& students) const {
@@ -304,22 +306,13 @@ void mainMenu() {
             string studentID;
             cout << "Enter Student ID: ";
             cin >> studentID;
-            ifstream inFile("students.txt");
-            if (inFile.is_open()) {
-                string line;
-                bool found = false;
-                while (getline(inFile, line)) {
-                    if (line == studentID) {
-                        Student student(studentID);
-                        student.loadFromFile(inFile);
-                        student.viewAttendance();
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) cout << "Student not found." << endl;
-                inFile.close();
-            } else cout << "Unable to open student file." << endl;
+            auto students = loadAllStudentsFromFile("students.txt");
+            auto it = students.find(studentID);
+            if (it != students.end()) {
+                it->second.viewAttendance();
+            } else {
+                cout << "Student not found." << endl;
+            }
             break;
         }
         case '4':
