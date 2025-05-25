@@ -1,6 +1,7 @@
 #include "TinySHA1.hpp"
 #include <iostream>
 #include <iomanip>
+#include <limits>
 #include <string>
 #include <unordered_map>
 #include <fstream>
@@ -132,10 +133,24 @@ public:
 
     void addStudent(unordered_map<string, Student>& students) {
         while (true) {
+            if (students.size() >= 100) {
+                cout << "Cannot add more students. Maximum limit of 100 reached." << endl;
+                break;
+            }
+
             string studentID;
             cout << "Enter new Student ID (or type 'done' to finish): ";
             cin >> studentID;
+
+            if (cin.fail()) { // Handle invalid input
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please enter a valid Student ID." << endl;
+                continue;
+            }
+
             if (studentID == "done") break;
+
             if (students.find(studentID) == students.end()) {
                 students[studentID] = Student(studentID);
                 cout << "Student added successfully." << endl;
@@ -151,21 +166,42 @@ public:
         string date;
         cout << "Enter Date (YYYY-MM-DD): ";
         cin >> date;
+
+        if (cin.fail()) { // Handle invalid input
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input. Please enter a valid date." << endl;
+            return;
+        }
+
         while (true) {
             string studentID;
             char status;
             cout << "Enter Student ID (or type 'done' to finish): ";
             cin >> studentID;
+
+            if (cin.fail()) { // Handle invalid input
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please enter a valid Student ID." << endl;
+                continue;
+            }
+
             if (studentID == "done") {
                 cout << "Attendance marking completed." << endl;
                 break;
             }
+
             cout << "Is the student present? (y/n): ";
             cin >> status;
-            if (status != 'y' && status != 'Y' && status != 'n' && status != 'N') {
-                cout << "Invalid input." << endl;
+
+            if (cin.fail() || (status != 'y' && status != 'Y' && status != 'n' && status != 'N')) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please enter 'y' or 'n'." << endl;
                 continue;
             }
+
             auto it = students.find(studentID);
             if (it != students.end()) {
                 it->second.markAttendance(date, (status == 'y' || status == 'Y'));
@@ -234,6 +270,14 @@ public:
         do {
             cout << "\nAdmin Menu\n1. Remove Student\n2. Add Teacher\n3. Load Data\n4. Logout\n";
             cin >> choice;
+
+            if (cin.fail()) { // Handle invalid input
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please enter a valid choice." << endl;
+                continue;
+            }
+
             switch (choice) {
             case '1': removeStudent(); break;
             case '2': addTeacher(); break;
@@ -248,6 +292,14 @@ public:
         string studentID;
         cout << "Enter Student ID to remove: ";
         cin >> studentID;
+
+        if (cin.fail()) { // Handle invalid input
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input. Please enter a valid Student ID." << endl;
+            return;
+        }
+
         if (students.erase(studentID)) {
             cout << "Student removed." << endl;
             saveAllStudentsToFile("students.txt", students);
@@ -258,8 +310,26 @@ public:
 
     void addTeacher() {
         string tUser, tPass;
-        cout << "Enter Teacher Username: "; cin >> tUser;
-        cout << "Enter Teacher Password: "; cin >> tPass;
+        cout << "Enter Teacher Username: ";
+        cin >> tUser;
+
+        if (cin.fail()) { // Handle invalid input
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input. Please enter a valid username." << endl;
+            return;
+        }
+
+        cout << "Enter Teacher Password: ";
+        cin >> tPass;
+
+        if (cin.fail()) { // Handle invalid input
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input. Please enter a valid password." << endl;
+            return;
+        }
+
         Teacher newTeacher(tUser, tPass);
         teachers[tUser] = newTeacher;
         saveAllTeachersToFile("teachers.txt", teachers);
@@ -277,20 +347,64 @@ void mainMenu() {
     do {
         cout << "\nWelcome to Attendance System\n1. Login as Admin\n2. Login as Teacher\n3. View Attendance as Student\n4. Exit\n";
         cin >> choice;
+
+        if (cin.fail()) { // Handle invalid input
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input. Please enter a valid choice." << endl;
+            continue;
+        }
+
         switch (choice) {
         case '1': {
             Admin admin("admin", "admin");
             string username, password;
-            cout << "Enter Admin Username: "; cin >> username;
-            cout << "Enter Admin Password: "; cin >> password;
+            cout << "Enter Admin Username: ";
+            cin >> username;
+
+            if (cin.fail()) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please enter a valid username." << endl;
+                continue;
+            }
+
+            cout << "Enter Admin Password: ";
+            cin >> password;
+
+            if (cin.fail()) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please enter a valid password." << endl;
+                continue;
+            }
+
             if (admin.login(username, password)) admin.menu();
             else cout << "Invalid credentials!" << endl;
             break;
         }
         case '2': {
             string username, password;
-            cout << "Enter Teacher Username: "; cin >> username;
-            cout << "Enter Teacher Password: "; cin >> password;
+            cout << "Enter Teacher Username: ";
+            cin >> username;
+
+            if (cin.fail()) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please enter a valid username." << endl;
+                continue;
+            }
+
+            cout << "Enter Teacher Password: ";
+            cin >> password;
+
+            if (cin.fail()) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please enter a valid password." << endl;
+                continue;
+            }
+
             auto teachers = loadAllTeachersFromFile("teachers.txt");
             auto it = teachers.find(username);
             if (it != teachers.end() && it->second.login(username, password)) {
@@ -306,6 +420,14 @@ void mainMenu() {
             string studentID;
             cout << "Enter Student ID: ";
             cin >> studentID;
+
+            if (cin.fail()) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please enter a valid Student ID." << endl;
+                continue;
+            }
+
             auto students = loadAllStudentsFromFile("students.txt");
             auto it = students.find(studentID);
             if (it != students.end()) {
